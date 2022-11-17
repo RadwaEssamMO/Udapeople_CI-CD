@@ -22,10 +22,10 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Build front-end
-          command: |
+          command: | 
+              npm i && npm run test
             # Your code here
-         
-            exit 1
+            #exit 1
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
