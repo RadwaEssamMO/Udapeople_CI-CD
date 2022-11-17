@@ -1,6 +1,5 @@
 version: 2.1
-orbs:
-  slack: circleci/slack@4.10.1
+
   
 jobs:
   say-hello:
@@ -27,7 +26,7 @@ jobs:
           name: Build front-end
           command: |
               cd frontend 
-              npm install
+              npm install --noaudit
               npm run build
             # Your code here
              #exit 1
@@ -46,7 +45,7 @@ jobs:
           name: Back-end build
           command: |
               cd backend 
-              npm install
+              npm install --noaudit
               npm run build
              # Your code here
              #exit 1
@@ -65,7 +64,7 @@ jobs:
           name: test-frontend
           command: |
               cd frontend
-              npm install
+              npm install --noaudit
               npm run test
 
                 
@@ -80,7 +79,7 @@ jobs:
           name: test-backtend
           command: |
               cd backend
-              npm install
+              npm install --noaudit
               npm run test  
               
    
