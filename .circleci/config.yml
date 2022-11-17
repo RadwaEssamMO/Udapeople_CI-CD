@@ -22,7 +22,7 @@ jobs:
           keys: [frontend-build]
       - run: cd frontend
       - run: npm i
-      - run: npm run lint
+      - run: npm run build
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
