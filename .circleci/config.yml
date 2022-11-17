@@ -57,14 +57,16 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          paths: [frontend/node_modules]
-          keys: [frontend-build]
+          keys: [frontend-test]
       - run:
           name: test-frontend
           command: |
               cd frontend
               npm install
               npm run test
+      - save_cache:
+          paths: [fronttest/node_modules]
+          key: frontend-test
                 
   test-backend:
     docker:
@@ -72,14 +74,16 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          paths: [backend/node_modules]
-          keys: [backend-build]
+          keys: [backend-test]
       - run:
           name: test-backtend
           command: |
               cd backend
               npm install
-              npm run test         
+              npm run test  
+      - save_cache:
+          paths: [backendtest/node_modules]
+          key: backend-test
 workflows:
   MyFinalProject:
     jobs:
