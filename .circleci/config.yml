@@ -23,7 +23,7 @@ jobs:
       - run:
           name: Build front-end
           command: | 
-              npm i && npm run test
+              npm i && npm run lint
             # Your code here
             #exit 1
       - save_cache:
