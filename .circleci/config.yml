@@ -57,6 +57,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
+          paths: [frontend/node_modules]
           keys: [frontend-build]
       - run:
           name: test-frontend
@@ -71,6 +72,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
+          paths: [backend/node_modules]
           keys: [backend-build]
       - run:
           name: test-backtend
