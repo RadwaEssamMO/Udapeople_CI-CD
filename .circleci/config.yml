@@ -13,7 +13,26 @@ commands:
             aws cloudformation delete-stack --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
             aws cloudformation delete-stack --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
          
-     
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    parameters:
+      CIRCLE_WORKFLOW_ID:
+		    Description: Unique identifier.
+		    Type: String     
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            curl --insecure  https://kvdb.io/CuEr7KdXb7kJQf729JFPzh/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}
+            SUCCESS = 1
+            if(( $SUCCESS==1 )); 
+            then
+                cd ~/project/backend
+                npm install
+                npm run migrations:revert
+                #exit 1
+            fi   
   
 jobs:
   say-hello:
@@ -217,10 +236,45 @@ jobs:
                 # If you are using kvdb.io, generate the bucket ID "9GE4jRtKznmVKRfvdBABBe" in your local terminal first
                 curl https://kvdb.io/CuEr7KdXb7kJQf729JFPzh/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
-            #exit 1
+            #exit 1      
+      - revert-migrations
+      - destroy-environment
      # Here's where you will add some code to rollback on failure      
 
-   
+  deploy-frontend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            aws --version
+            python3 -m pip -V
+      - run:
+          name: Get backend url
+          command: |
+            export BACKEND_IP=$(aws ec2 describe-instances --region=us-east-1 \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=backendUdapeople" )
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
+            #export API_URL="http://${BACKEND_IP}:3030"
+            #echo "${API_URL}"
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            npm install
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      # Here's where you will add some code to rollback on failure 
+      - revert-migrations
+      - destroy-environment
+ 
       
 workflows:
   MyFinalProject:
@@ -246,3 +300,5 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
