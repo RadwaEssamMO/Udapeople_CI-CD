@@ -178,7 +178,7 @@ jobs:
           fingerprints: ["de:54:58:46:39:39:23:f6:02:d5:76:32:5c:e8:b1:04"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
           at: ~/
-      - run: cat project/.circleci/ansible/inventory.txt
+      - run: cat ~/project/.circleci/ansible/inventory.txt
       - run:
           name: Install dependencies
           command: |
@@ -191,7 +191,7 @@ jobs:
             ansible-playbook -i inventory.txt configure-server.yml 
             #exit 1
       # Here's where you will add some code to rollback on failure  
-      - destroy-environment
+   
       
 workflows:
   MyFinalProject:
