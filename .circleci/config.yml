@@ -258,6 +258,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [frontend-build]
       - run:
           name: Install dependencies
           command: |
@@ -297,6 +299,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-build]
       - add_ssh_keys:
           fingerprints: ["de:54:58:46:39:39:23:f6:02:d5:76:32:5c:e8:b1:04"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
