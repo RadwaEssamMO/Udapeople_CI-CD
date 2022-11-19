@@ -35,9 +35,9 @@
     state: directory
 
 - name: Copy Files
-  template:
-    src: "artifact.tar.gz"
-    dest: "~/web"
+  ansible.builtin.copy:
+    src: artifact.tar.gz
+    dest: ~/web
 
 - name: extract the zipped artifact
   unarchive:
