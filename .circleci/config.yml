@@ -333,7 +333,7 @@ jobs:
       - empty-S3
       - destroy-environment
    
- smoke-test:
+  smoke-test:
     docker:
        - image: alpine:latest
     steps:
