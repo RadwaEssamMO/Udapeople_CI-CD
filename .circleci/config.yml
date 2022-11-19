@@ -375,11 +375,10 @@ jobs:
             echo ${URL} 
             if curl -s ${URL} | grep "Welcome"
             then
-      # Change this to 0 after the job fails
                 return 1
             else
                 return 1
-             fi
+            fi
       # Here's where you will add some code to rollback on failure 
       - revert-migrations
       - empty-S3
