@@ -4,15 +4,7 @@
     state: directory
     mode: '0755'
 
-- name: "copy files"
-  copy:
-    src: ~/project/.circleci/backend/artifact.tar.gz
-    dest: ~/web
-    backup: true
-  
-- name: "start server"
-  shell: |
-    sudo chmod 777 artifact.tar.gz
+
     
 - name: extract the zipped artifact
   unarchive:
