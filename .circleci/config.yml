@@ -341,7 +341,7 @@ jobs:
           command: |
             apk update
             apk add --update curl
-            sudo apt  install awscli 
+            apk add aws-cli
            
       
       - run:
