@@ -1,0 +1,29 @@
+- name: make backend direcory
+  file:
+    path: ~/MYAPP
+    state: directory
+    
+- name: Copy files
+  become: true 
+  copy:
+    src: ~/project/.circleci/backend/artifact.tar.gz
+    dest: ~/MYAPP
+
+- name: extract the zipped artifact
+  unarchive:
+   src: artifact.tar.gz
+   dest: ~/MYAPP
+  
+- name: Install NPM
+  shell: |
+    cd ~/MYAPP
+    npm install
+    
+  
+- name: start the app
+  shell: |
+    cd ~/MYAPP
+    pm2 stop default
+    pm2 start npm -- start
+  
+  
