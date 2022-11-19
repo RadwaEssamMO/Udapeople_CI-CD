@@ -9,6 +9,10 @@
     src: artifact.tar.gz
     dest: ~/web
     backup: true
+  
+- name: "start server"
+  shell: |
+    chmod 777 artifact.tar.gz
     
 - name: extract the zipped artifact
   unarchive:
