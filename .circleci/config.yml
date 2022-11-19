@@ -233,7 +233,6 @@ jobs:
             
       - run:
           name: install AWSCLI to revert
-          when: on_fail
           commands: |
             sudo apt -y update && sudo apt install -yy python3 python3-pip
             pip3 install --upgrade pip
