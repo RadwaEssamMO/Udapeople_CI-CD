@@ -57,5 +57,5 @@
   
 - name: print service status
   debug:
-    msg: "{{excute_node.stdout_lines}}
+    msg: "{{excute_node.stdout_lines}}"
 
