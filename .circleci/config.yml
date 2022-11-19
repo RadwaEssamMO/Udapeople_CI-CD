@@ -380,9 +380,9 @@ jobs:
                 return 1
             fi
       # Here's where you will add some code to rollback on failure 
-      #- revert-migrations
-      #- empty-bucket
-      #- destroy-environment
+      - revert-migrations
+      - empty-bucket
+      - destroy-environment
 workflows:
   MyFinalProject:
     jobs:
