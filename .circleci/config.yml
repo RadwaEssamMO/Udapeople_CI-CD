@@ -31,7 +31,7 @@ commands:
             command: |
                 # Your Memstash or kvdb.io GET URL code goes here
                 # Example: kvdb.io
-                SUCCESS=$(curl --insecure  https://kvdb.io/XsgrYuyPESbxCcte4sLxEM/migration_$\{CIRCLE_WORKFLOW_ID:0:7\})
+                SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_$\{CIRCLE_WORKFLOW_ID:0:7\})
                 # Logic for reverting the database state
                 if (( $SUCCESS == 1 ));
                 then
@@ -184,7 +184,7 @@ jobs:
             cd ~/project/.circleci/ansible
             aws ec2 describe-instances --region=us-east-1 \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:Name,Values=backendUdapeople" \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}-" \
               --output text >> inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
             #exit 1
@@ -244,7 +244,7 @@ jobs:
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
                 # If you are using kvdb.io, generate the bucket ID "9GE4jRtKznmVKRfvdBABBe" in your local terminal first
-                curl https://kvdb.io/CuEr7KdXb7kJQf729JFPzh/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+                curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
            
                           
@@ -314,20 +314,28 @@ jobs:
             pip3 install --upgrade pip
             pip3 install awscli
             python3 -m pip install --user ansible
+            cd backend
+            npm i
+            
+      - run:
+          name: Backage Backend
+          command: |
+            cd backend
+            npm run build
+            tar -czvf artifact.tar.gz dist/* package/*
+            cd ..
+            cp backend/artifact.tar.gz .circleci/ansible/deploy/files
+            
+            
             
       - run:
           name: Deploy backend
           command: |
-            cd backend
-            npm i
-            npm run build
-            cd ..
-            # Zip the directory
-            tar -C backend -czvf artifact.tar.gz .
-            sudo chmod 777 artifact.tar.gz
-            cp artifact.tar.gz .circleci/ansible
+            export TYPEORM_MIGRATIONS_DIR=./src/migrations
+            export TYPEORM_ENTITIES=./src/modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./src/migrations/*.ts
+            
             cd .circleci/ansible
-            #echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
    
