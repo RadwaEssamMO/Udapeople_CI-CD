@@ -1,0 +1,269 @@
+version: 2.1
+
+
+
+commands:  
+
+    ##----ROLLBACK---------------
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+            aws cloudformation delete-stack --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+            aws cloudformation delete-stack --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+            
+  empty-bucket:
+    description: Delete files uploaded to S3.
+    steps:
+      - run:
+          name: Delete files uploaded to S3
+          when: on_fail
+          command: |
+            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            
+         
+  revert-migrations:
+    description: Revert the last migration     
+    steps:
+        steps:
+          - run:
+              name: Revert migrations
+              when: on_fail
+              command: |
+                SUCCESS=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/migration_$\{CIRCLE_WORKFLOW_ID:0:7\})
+                if(( $SUCCESS==1 )); 
+                then
+                cd ~/project/backend
+                npm install
+                npm run migrations:revert
+                fi
+
+
+    ##install all need dependances commands
+
+  install_awscli:
+    description: INSTALL AWSCLI 
+    steps:
+      - run : 
+          name : INSTALL AWSCLI 
+          command : |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            sudo apt install -y unzip  
+            unzip awscliv2.zip
+            sudo ./aws/install
+            
+ install_ansible: 
+    description : INSTALL ANSIBLE 
+    steps:
+      - run :
+          name : INSTALL ANSIBLE 
+          command : |
+            sudo apt update
+            sudo apt install -y software-properties-common 
+            sudo add-apt-repository --yes --update ppa:ansible/ansible
+            sudo apt install -y ansible 
+            
+            
+  install_nodejs:
+    description: INSATALL NODEJS
+    steps: 
+    - run :
+        name : INSATALL NODEJS
+        command : |
+          curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash - 
+          sudo apt install -y nodejs 
+          # curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - 
+          # sudo apt install -y nodejs
+          # sudo npm install --global n 
+          # sudo n 13.8.0  
+          
+          
+          
+jobs:
+  
+  build-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run:
+          name: Build front-end
+          command: |
+              cd frontend 
+              npm install --noaudit
+              npm run build
+            
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-build
+
+  build-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Back-end build
+          command: |
+              cd backend 
+              npm install --noaudit
+              npm run build
+             # Your code here
+             #exit 1
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
+          
+  test-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run:
+          name: test-frontend
+          command: |
+              cd frontend
+              npm install --noaudit
+              npm run test
+  
+                
+  test-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: test-backtend
+          command: |
+              cd backend
+              npm install --noaudit
+              npm run test  
+              
+   
+  scan-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: scan-frontend
+          command: |
+              cd frontend
+              npm install --noaudit
+              npm audit fix --audit-level=critical
+              npm audit fix --audit-level=critical --force
+              npm audit --audit-level=critical
+              
+              
+  scan-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: scan-backen
+          command: |
+              cd backend
+              npm install --noaudit
+              npm audit fix --audit-level=critical
+              npm audit fix --audit-level=critical --force
+              npm audit --audit-level=critical
+              
+              
+ deploy-infrastructure:
+    docker:
+       - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum install -y tar gzip
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+                --template-file .circleci/files/backend.yml \
+                --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+                --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
+                --tags project=udapeople
+              #exit 1
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            aws cloudformation deploy \
+                --template-file .circleci/files/frontend.yml \
+                --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+                --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
+                --tags project=udapeople
+             
+              #exit 1
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            cd ~/project/.circleci/ansible
+            aws ec2 describe-instances --region=us-east-1 \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text >> inventory.txt
+            cat ~/project/.circleci/ansible/inventory.txt
+            #exit 1
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
+      # Here's where you will add some code to rollback on failure                
+              
+      - destroy-environment
+      
+    configure-infrastructure:
+    docker:
+       - image : cimg/base:stable 
+    steps:
+      - checkout
+      - install_ansible 
+      - install_awscli
+      - add_ssh_keys:
+          fingerprints: ["de:54:58:46:39:39:23:f6:02:d5:76:32:5c:e8:b1:04"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Configure server
+          command: |
+            cat ~/project/.circleci/ansible/inventory.txt
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/configure-server.yml
+            
+      - destroy-environment
+      
+  run-migrations:
+    docker:
+      - image: cimg/node:13.8.0
+    steps:
+      - checkout
+      - install_awscli
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install -y
+            npm run migrations > migrations_dump.txt
+      - run:
+          name: Send migration results to kvdb.io
+          command: |
+            echo "has been executed successfully." > ~/project/backend/migrations_dump.txt
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            then
+              curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
+              echo ${KVDB_BUCKET}
+            fi   
+      - destroy-environment
+      - revert-migrations  
