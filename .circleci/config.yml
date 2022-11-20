@@ -1,8 +1,7 @@
 version: 2.1
 
 
-
-commands:  
+commands:
 
     ##----ROLLBACK---------------
   destroy-environment:
@@ -55,7 +54,7 @@ commands:
             unzip awscliv2.zip
             sudo ./aws/install
             
- install_ansible: 
+  install_ansible: 
     description : INSTALL ANSIBLE 
     steps:
       - run :
@@ -181,7 +180,7 @@ jobs:
               npm audit --audit-level=critical
               
               
- deploy-infrastructure:
+  deploy-infrastructure:
     docker:
        - image: amazon/aws-cli
     steps:
@@ -224,7 +223,7 @@ jobs:
               
       - destroy-environment
       
-    configure-infrastructure:
+  configure-infrastructure:
     docker:
        - image : cimg/base:stable 
     steps:
