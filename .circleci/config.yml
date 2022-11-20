@@ -32,9 +32,9 @@ commands:
             command: |
                 # Your Memstash or kvdb.io GET URL code goes here
                 # Example: kvdb.io
-                SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_$\{CIRCLE_WORKFLOW_ID:0:7\})
+                x=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_$\{CIRCLE_WORKFLOW_ID:0:7\})
                 # Logic for reverting the database state
-                if (( $SUCCESS == 1 ));
+                if (( $x == 1 ));
                 then
                     cd ~/project/backend
                     npm install
@@ -373,7 +373,7 @@ jobs:
             export BACKEND_IP=$(ws ec2 describe-instances --region=us-east-1 \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text" )
+              --output text )
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             if curl -s "${API_URL}/api/status" | grep "ok"
@@ -395,8 +395,8 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure 
       - revert-migrations
-      - empty-bucket
-      - destroy-environment
+      #- empty-bucket
+      #- destroy-environment
       
   cloudfront-update:
     docker:
