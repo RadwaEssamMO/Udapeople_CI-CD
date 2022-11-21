@@ -31,7 +31,7 @@
     "migrations:revert": "ts-node -r dotenv/config node_modules/.bin/typeorm migration:revert",
     "update:domain": "npm update @kiwihr/kiwi-domain"
   },
- "dependencies": {
+  "dependencies": {
     "@hapi/joi": "^17.1.1",
     "@nestjs/common": "^6.11.11",
     "@nestjs/core": "^6.11.11",
@@ -77,7 +77,7 @@
     "nodemon": "^1.19.4",
     "prettier": "^1.19.1",
     "rimraf": "^2.6.2",
-    "standard-version": "^4.4.0",
+    "standard-version": "^7.0.0",
     "supertest": "^3.4.2",
     "ts-jest": "^24.3.0",
     "ts-loader": "^4.4.2",
